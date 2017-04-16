@@ -1,0 +1,1 @@
+global.nextai = require('../dist/nextai');

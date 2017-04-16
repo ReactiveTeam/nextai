@@ -1,0 +1,33 @@
+{
+  "name": "nextai",
+  "version": "0.1.0",
+  "homepage": "https://github.com/reactiveteam/nextai",
+  "authors": [
+    "Haikal Izzuddin <haikalizz@prototypestd.cu.ma>"
+  ],
+  "description": "NextAI is part of the #Next Initiative by Prototype Studios. NextAI powers some of the services in the initiative.",
+  "main": "./dist/nextai.min.js",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "neural",
+    "network",
+    "deep",
+    "learning",
+    "machine",
+    "learning",
+    "lstm",
+    "perceptron"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

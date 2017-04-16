@@ -1,0 +1,1 @@
+global.nextai = require('../src/nextai');
