@@ -98,7 +98,7 @@
 	    Layer: __webpack_require__(3),
 	    Network: __webpack_require__(4),
 	    Trainer: __webpack_require__(5),
-	    Architect: __webpack_require__(6)
+	    Architect: __webpack_require__(7)
 	};
 
 	// CommonJS & AMD
@@ -1234,7 +1234,7 @@
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(module) {// export
+	/* WEBPACK VAR INJECTION */(function(module, __dirname) {// export
 	if (module) module.exports = Network;
 
 	// import
@@ -1729,7 +1729,11 @@
 	  },
 
 
-	  // Return a HTML5 WebWorker specialized on training the network stored in `memory`.
+	  // Train network in a parallel process.
+	  // In the web browser environment, it returns a HTML5 WebWorker and in Node.js
+	  // environment, it uses the Child Processes module to return an object with an
+	  // WebWebwork cloned interface. Both will return a sandboxed script specialized
+	  // on training the network stored in `memory`.
 	  // Train based on the given dataSet and options.
 	  // The worker returns the updated `memory` when done.
 	  worker: function(memory, set, options) {
@@ -1773,23 +1777,35 @@
 	    if (!this.optimized)
 	      this.optimize();
 
-	    var hardcode = "var inputs = " + this.optimized.data.inputs.length + ";\n";
-	    hardcode += "var outputs = " + this.optimized.data.outputs.length + ";\n";
-	    hardcode += "var F =  new Float64Array([" + this.optimized.memory.toString() + "]);\n";
-	    hardcode += "var activate = " + this.optimized.activate.toString() + ";\n";
-	    hardcode += "var propagate = " + this.optimized.propagate.toString() + ";\n";
-	    hardcode +=
-	        "onmessage = function(e) {\n" +
-	          "if (e.data.action == 'startTraining') {\n" +
-	            "train(" + JSON.stringify(set) + "," + JSON.stringify(workerOptions) + ");\n" +
-	          "}\n" +
-	        "}";
-
-	    var workerSourceCode = workerFunction + '\n' + hardcode;
-	    var blob = new Blob([workerSourceCode]);
-	    var blobURL = window.URL.createObjectURL(blob);
-
-	    return new Worker(blobURL);
+	    var hardcode =
+			"var F = new Float64Array([" + this.optimized.memory.join(',') + "]);\n" +
+			"var network = { " + workerFunction + "\n" +
+			"activate: " + this.optimized.activate.toString() + ",\n" +
+			"propagate: " + this.optimized.propagate.toString() + "}\n" +
+			"var onmessage = function(e) {\n" +
+			"	if(e.data.action == `startTraining`) {\n" +
+			"		network.train(" + JSON.stringify(set) + "," + JSON.stringify(workerOptions) + ");\n" +
+			"	}\n" +
+			"}";
+			
+		if (typeof(window) != 'undefined' && window.Blob && window.Worker) {
+			var blob = new Blob([hardcode]);
+			var blobURL = window.URL.createObjectURL(blob);
+			
+			return new Worker(blobURL);
+		}else if(__webpack_require__(6)){
+			// Mimic WebWorker in Node.js environment
+			var cProcess = __webpack_require__(6);
+			var proc = cProcess.fork(__dirname+'/node-worker.js', [hardcode]);
+			proc.postMessage = function(msg){ proc.send(msg) };
+			proc.onmessage = function(){ console.error('Must be implemented by the client') };
+			proc.on('message', function(msg){ proc.onmessage({data:msg}) });
+			proc.terminate = function(){ proc.kill('SIGHUP') };
+			
+			return proc;
+		}else{
+			throw new Error('This environment has no support for parallel networks.');
+		}
 	  },
 
 	  // returns a copy of the network
@@ -1815,18 +1831,17 @@
 	  //  using the .toString() method
 
 	  // Load and name the train function
-	  var train_f = Trainer.prototype.train.toString();
-	  train_f = train_f.replace('function (set', 'function train(set') + '\n';
+	  var train_f = 'train: ' + Trainer.prototype.train.toString() + ',\n';
 
 	  // Load and name the _trainSet function
-	  var _trainSet_f = Trainer.prototype._trainSet.toString().replace(/this.network./g, '');
-	  _trainSet_f = _trainSet_f.replace('function (set', 'function _trainSet(set') + '\n';
+	  var _trainSet_f = Trainer.prototype._trainSet.toString().replace(/this\.network./g, 'this');
+	  _trainSet_f = '_trainSet: '+ _trainSet_f + ',\n';
 	  _trainSet_f = _trainSet_f.replace('this.crossValidate', 'crossValidate');
 	  _trainSet_f = _trainSet_f.replace('crossValidate = true', 'crossValidate = { }');
 
 	  // Load and name the test function
-	  var test_f = Trainer.prototype.test.toString().replace(/this.network./g, '');
-	  test_f = test_f.replace('function (set', 'function test(set') + '\n';
+	  var test_f = Trainer.prototype.test.toString().replace(/this\.network./g, 'this');
+	  test_f = 'test: ' + test_f + ',\n';
 
 	  return Network._SHARED_WORKER_FUNCTIONS = train_f + _trainSet_f + test_f;
 	};
@@ -1881,7 +1896,7 @@
 	  return new Network(layers);
 	};
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)(module), "/"))
 
 /***/ }),
 /* 5 */
@@ -2568,6 +2583,12 @@
 
 /***/ }),
 /* 6 */
+/***/ (function(module, exports) {
+
+	module.exports = null;
+
+/***/ }),
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(module) {// import

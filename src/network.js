@@ -545,7 +545,7 @@ Network.prototype = {
 		"var F = new Float64Array([" + this.optimized.memory.join(',') + "]);\n" +
 		"var network = { " + workerFunction + "\n" +
 		"activate: " + this.optimized.activate.toString() + ",\n" +
-		"propagate: " + this.optimized,propagate.toString() + "}\n" +
+		"propagate: " + this.optimized.propagate.toString() + "}\n" +
 		"var onmessage = function(e) {\n" +
 		"	if(e.data.action == `startTraining`) {\n" +
 		"		network.train(" + JSON.stringify(set) + "," + JSON.stringify(workerOptions) + ");\n" +
