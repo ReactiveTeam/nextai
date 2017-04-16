@@ -5,10 +5,10 @@
   "main": "./src/nextai",
   "scripts": {
     "test": "npm run test:src",
-    "test:src": "mocha test --require src/synaptic.js ./test",
+    "test:src": "mocha test --require src/nextai.js ./test",
     "test:dist": "npm run build && npm run test:mocha:dist && npm run test:karma:browsers",
-    "test:mocha:src": "mocha test --require src/synaptic.js ./test",
-    "test:mocha:dist": "mocha test --require dist/synaptic.js ./test",
+    "test:mocha:src": "mocha test --require src/nextai.js ./test",
+    "test:mocha:dist": "mocha test --require dist/nextai.js ./test",
     "test:karma:browsers": "karma start --single-run --browsers Chrome,Firefox,SafariPrivate",
     "test:karma:phantomjs": "karma start --single-run --browsers PhantomJS",
     "test:travis": "npm run test:mocha:src && npm run build && npm run test:mocha:dist",

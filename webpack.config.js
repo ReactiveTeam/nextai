@@ -6,7 +6,7 @@ module.exports = {
 	  child_process: 'null'
   },
   entry: {
-    next: './src/nextai.js',
+    nextai: './src/nextai.js',
     'nextai.min': './src/nextai.js'
   },
   output: {
